@@ -49,7 +49,10 @@
     "redirectToURL": {
       "title": "Redirect call to URL",
       "description": "Redirect the call to the given URL instead of returning a '503 Service Unavailable' status (supports EL).",
-      "type" : "string"
+      "type" : "string",
+      "x-schema-form": {
+        "expression-language": true
+      }
     }
   },
   "required": [
