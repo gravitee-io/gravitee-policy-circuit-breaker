@@ -7,7 +7,7 @@
     "failureRateThreshold": {
       "title": "Failure rate threshold",
       "description": "Failure (status code >= 500) rate threshold before the circuit breaker switches to the open state.",
-      "type" : "number",
+      "type" : "integer",
       "default": 50,
       "minimum": 0,
       "maximum": 100,
@@ -16,7 +16,7 @@
     "slowCallRateThreshold": {
       "title": "Slow call rate threshold",
       "description": "Slow call (response-time > slowCallDurationThreshold) rate threshold before the circuit breaker switches to the open state.",
-      "type" : "number",
+      "type" : "integer",
       "default": 100,
       "minimum": 0,
       "maximum": 100,
@@ -33,7 +33,7 @@
     "windowSize" : {
       "title": "Sliding windows size",
       "description": "The size of the sliding window which is used to record the outcome of calls when the circuit breaker is closed.",
-      "type" : "number",
+      "type" : "integer",
       "default": 100,
       "minimum": 0,
       "exclusiveMinimum": false
