@@ -49,9 +49,7 @@ public class CircuitBreakerPolicy {
     private static final String CIRCUIT_BREAKER_OPEN_STATE = "CIRCUIT_BREAKER_OPEN_STATE";
     private static final String CIRCUIT_BREAKER_OPEN_STATE_MESSAGE = "Service temporarily unavailable";
 
-    private static CircuitBreakerRegistry registry = CircuitBreakerRegistry.ofDefaults();
-
-    private static ConcurrentMap<String, CircuitBreakerConfig> cbConfigs = new ConcurrentHashMap<>();
+    private final CircuitBreakerRegistry registry = CircuitBreakerRegistry.ofDefaults();
 
     private final CircuitBreakerPolicyConfiguration configuration;
 
@@ -94,17 +92,17 @@ public class CircuitBreakerPolicy {
     private CircuitBreaker get(ExecutionContext context) {
         String resolvedPath = (String) context.getAttribute(ExecutionContext.ATTR_RESOLVED_PATH);
 
-        return registry.circuitBreaker(resolvedPath, () -> cbConfigs.computeIfAbsent(resolvedPath, path ->
+        return registry.circuitBreaker(resolvedPath, () ->
                 CircuitBreakerConfig.custom()
-                .failureRateThreshold(configuration.getFailureRateThreshold())
-                .slowCallRateThreshold(configuration.getSlowCallRateThreshold())
-                .slowCallDurationThreshold(Duration.ofMillis(configuration.getSlowCallDurationThreshold()))
-                .waitDurationInOpenState(Duration.ofMillis(configuration.getWaitDurationInOpenState()))
-                .permittedNumberOfCallsInHalfOpenState(1)
-                .minimumNumberOfCalls(1)
-                .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
-                .slidingWindowSize(configuration.getWindowSize())
-                .build()));
+                        .failureRateThreshold(configuration.getFailureRateThreshold())
+                        .slowCallRateThreshold(configuration.getSlowCallRateThreshold())
+                        .slowCallDurationThreshold(Duration.ofMillis(configuration.getSlowCallDurationThreshold()))
+                        .waitDurationInOpenState(Duration.ofMillis(configuration.getWaitDurationInOpenState()))
+                        .permittedNumberOfCallsInHalfOpenState(1)
+                        .minimumNumberOfCalls(1)
+                        .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+                        .slidingWindowSize(configuration.getWindowSize())
+                        .build());
     }
 
     static class CircuitBreakerInvoker implements Invoker {
