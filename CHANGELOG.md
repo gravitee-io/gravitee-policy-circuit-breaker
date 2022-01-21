@@ -1,0 +1,11 @@
+# [[secure]](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/compare/1.0.1...[secure]) (2022-01-21)
+
+
+### Bug Fixes
+
+* **schema:** bad format for exclusiveMaximum/Minimum ([9da5d40](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/9da5d40bdc7509a05a56bc3ea4532afea7a2c902))
+
+
+### Features
+
+* **perf:** adapt policy for new classloader system ([aa9e0ee](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/aa9e0ee08ea59c255be15fc717af50e6657b7bc7)), closes [gravitee-io/issues#6758](https://github.com/gravitee-io/issues/issues/6758)
