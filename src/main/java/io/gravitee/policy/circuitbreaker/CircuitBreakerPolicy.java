@@ -34,7 +34,6 @@ import io.gravitee.policy.api.PolicyChain;
 import io.gravitee.policy.api.PolicyResult;
 import io.gravitee.policy.api.annotations.OnRequest;
 import io.gravitee.policy.circuitbreaker.configuration.CircuitBreakerPolicyConfiguration;
-
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -75,15 +74,16 @@ public class CircuitBreakerPolicy {
                 policyChain.doNext(request, response);
             } else {
                 policyChain.failWith(
-                        PolicyResult.failure(
-                                CIRCUIT_BREAKER_OPEN_STATE,
-                                HttpStatusCode.SERVICE_UNAVAILABLE_503,
-                                CIRCUIT_BREAKER_OPEN_STATE_MESSAGE,
-                                Maps.<String, Object>builder()
-                                        .put("failure_rate", circuitBreaker.getMetrics().getFailureRate())
-                                        .put("slow_call_rate", circuitBreaker.getMetrics().getSlowCallRate())
-                                        .build()
-                        )
+                    PolicyResult.failure(
+                        CIRCUIT_BREAKER_OPEN_STATE,
+                        HttpStatusCode.SERVICE_UNAVAILABLE_503,
+                        CIRCUIT_BREAKER_OPEN_STATE_MESSAGE,
+                        Maps
+                            .<String, Object>builder()
+                            .put("failure_rate", circuitBreaker.getMetrics().getFailureRate())
+                            .put("slow_call_rate", circuitBreaker.getMetrics().getSlowCallRate())
+                            .build()
+                    )
                 );
             }
         }
@@ -92,17 +92,21 @@ public class CircuitBreakerPolicy {
     private CircuitBreaker get(ExecutionContext context) {
         String resolvedPath = (String) context.getAttribute(ExecutionContext.ATTR_RESOLVED_PATH);
 
-        return registry.circuitBreaker(resolvedPath, () ->
-                CircuitBreakerConfig.custom()
-                        .failureRateThreshold(configuration.getFailureRateThreshold())
-                        .slowCallRateThreshold(configuration.getSlowCallRateThreshold())
-                        .slowCallDurationThreshold(Duration.ofMillis(configuration.getSlowCallDurationThreshold()))
-                        .waitDurationInOpenState(Duration.ofMillis(configuration.getWaitDurationInOpenState()))
-                        .permittedNumberOfCallsInHalfOpenState(1)
-                        .minimumNumberOfCalls(1)
-                        .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
-                        .slidingWindowSize(configuration.getWindowSize())
-                        .build());
+        return registry.circuitBreaker(
+            resolvedPath,
+            () ->
+                CircuitBreakerConfig
+                    .custom()
+                    .failureRateThreshold(configuration.getFailureRateThreshold())
+                    .slowCallRateThreshold(configuration.getSlowCallRateThreshold())
+                    .slowCallDurationThreshold(Duration.ofMillis(configuration.getSlowCallDurationThreshold()))
+                    .waitDurationInOpenState(Duration.ofMillis(configuration.getWaitDurationInOpenState()))
+                    .permittedNumberOfCallsInHalfOpenState(1)
+                    .minimumNumberOfCalls(1)
+                    .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+                    .slidingWindowSize(configuration.getWindowSize())
+                    .build()
+        );
     }
 
     static class CircuitBreakerInvoker implements Invoker {
@@ -116,31 +120,34 @@ public class CircuitBreakerPolicy {
         }
 
         @Override
-        public void invoke(ExecutionContext context, ReadStream<Buffer> stream,
-                           Handler<ProxyConnection> connectionHandler) {
-            decorated.invoke(context, stream, proxyConnection -> {
+        public void invoke(ExecutionContext context, ReadStream<Buffer> stream, Handler<ProxyConnection> connectionHandler) {
+            decorated.invoke(
+                context,
+                stream,
+                proxyConnection -> {
+                    ProxyConnection wrappedProxyConnection = new ProxyConnection() {
+                        @Override
+                        public WriteStream<Buffer> write(Buffer buffer) {
+                            proxyConnection.write(buffer);
+                            return this;
+                        }
 
-                ProxyConnection wrappedProxyConnection = new ProxyConnection() {
+                        @Override
+                        public void end() {
+                            proxyConnection.end();
+                        }
 
-                    @Override
-                    public WriteStream<Buffer> write(Buffer buffer) {
-                        proxyConnection.write(buffer);
-                        return this;
-                    }
+                        @Override
+                        public ProxyConnection responseHandler(Handler<ProxyResponse> responseHandler) {
+                            return proxyConnection.responseHandler(
+                                new CircuitBreakerResponseHandler(responseHandler, context, circuitBreaker)
+                            );
+                        }
+                    };
 
-                    @Override
-                    public void end() {
-                        proxyConnection.end();
-                    }
-
-                    @Override
-                    public ProxyConnection responseHandler(Handler<ProxyResponse> responseHandler) {
-                        return proxyConnection.responseHandler(new CircuitBreakerResponseHandler(responseHandler, context, circuitBreaker));
-                    }
-                };
-
-                connectionHandler.handle(wrappedProxyConnection);
-            });
+                    connectionHandler.handle(wrappedProxyConnection);
+                }
+            );
         }
     }
 
