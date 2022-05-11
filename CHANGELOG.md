@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/compare/1.1.0...1.1.1) (2022-05-11)
+
+
+### Bug Fixes
+
+* assign policy to the 'others' category ([a149501](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/a14950109ace66d31bfda569101cf716a3370d17))
+
 # [[secure]](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/compare/1.0.1...[secure]) (2022-01-21)
 
 
