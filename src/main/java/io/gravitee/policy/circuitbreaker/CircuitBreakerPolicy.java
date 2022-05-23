@@ -35,8 +35,6 @@ import io.gravitee.policy.api.PolicyResult;
 import io.gravitee.policy.api.annotations.OnRequest;
 import io.gravitee.policy.circuitbreaker.configuration.CircuitBreakerPolicyConfiguration;
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -46,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 public class CircuitBreakerPolicy {
 
     private static final String CIRCUIT_BREAKER_OPEN_STATE = "CIRCUIT_BREAKER_OPEN_STATE";
-    private static final String CIRCUIT_BREAKER_OPEN_STATE_MESSAGE = "Service temporarily unavailable";
+    static final String CIRCUIT_BREAKER_OPEN_STATE_MESSAGE = "Service temporarily unavailable";
 
     private final CircuitBreakerRegistry registry = CircuitBreakerRegistry.ofDefaults();
 
