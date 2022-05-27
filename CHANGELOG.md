@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/compare/1.1.1...1.1.2) (2022-05-27)
+
+
+### Bug Fixes
+
+* bump dependencies & improve a little the README ([b8eedd3](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/b8eedd3a2102d8fe80c84ff37a4234cf38308023))
+
 ## [1.1.1](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/compare/1.1.0...1.1.1) (2022-05-11)
 
 
