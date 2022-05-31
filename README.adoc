@@ -17,7 +17,8 @@ endif::[]
 
 == Description
 
-To update
+This policy allows to switch to another backend in case of errors or latency. It is possible to configure errors and latency rate to open the circuit breaker.
+
 
 == Compatibility with APIM
 
