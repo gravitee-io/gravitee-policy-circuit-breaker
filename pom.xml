@@ -23,7 +23,7 @@
 
     <groupId>io.gravitee.policy</groupId>
     <artifactId>gravitee-policy-circuit-breaker</artifactId>
-    <version>1.1.4</version>
+    <version>1.1.5</version>
 
     <name>Gravitee.io APIM - Policy - Circuit Breaker</name>
     <description>Switch to another backend or make the call fails in case of errors or latency</description>
