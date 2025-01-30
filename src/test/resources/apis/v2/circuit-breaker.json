@@ -1,9 +1,9 @@
 {
-    "id": "my-api-redirect",
-    "name": "my-api",
+    "id": "v2-circuit-breaker",
+    "name": "v2-circuit-breaker",
     "gravitee": "2.0.0",
     "proxy": {
-        "context_path": "/circuit-redirect",
+        "context_path": "/v2-circuit-breaker",
         "endpoints": [
             {
                 "name": "default",
@@ -36,7 +36,7 @@
                         "slowCallDurationThreshold": 500,
                         "windowSize": 2,
                         "waitDurationInOpenState": 50000,
-                        "redirectToURL": "http://localhost:8089/redirection"
+                        "redirectToURL": ""
                     }
                 }
             ],
