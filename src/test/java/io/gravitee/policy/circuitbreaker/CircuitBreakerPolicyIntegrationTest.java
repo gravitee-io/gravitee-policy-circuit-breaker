@@ -23,19 +23,18 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.gravitee.apim.gateway.tests.sdk.AbstractPolicyTest;
 import io.gravitee.apim.gateway.tests.sdk.annotations.DeployApi;
 import io.gravitee.apim.gateway.tests.sdk.annotations.GatewayTest;
 import io.gravitee.common.http.HttpStatusCode;
 import io.gravitee.definition.model.Api;
+import io.gravitee.definition.model.ExecutionMode;
 import io.gravitee.policy.circuitbreaker.configuration.CircuitBreakerPolicyConfiguration;
-import io.reactivex.observers.TestObserver;
-import io.vertx.reactivex.core.buffer.Buffer;
-import io.vertx.reactivex.ext.web.client.HttpResponse;
-import io.vertx.reactivex.ext.web.client.WebClient;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.rxjava3.core.http.HttpClient;
+import io.vertx.rxjava3.core.http.HttpClientRequest;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -48,7 +47,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  * @author Yann TAVERNIER (yann.tavernier at graviteesource.com)
  * @author GraviteeSource Team
  */
-@GatewayTest
+@GatewayTest(v2ExecutionMode = ExecutionMode.V3)
 class CircuitBreakerPolicyIntegrationTest extends AbstractPolicyTest<CircuitBreakerPolicy, CircuitBreakerPolicyConfiguration> {
 
     public static final String LOCALHOST = "localhost:";
@@ -58,37 +57,33 @@ class CircuitBreakerPolicyIntegrationTest extends AbstractPolicyTest<CircuitBrea
     static WireMockExtension redirectServer = WireMockExtension.newInstance().options(wireMockConfig().dynamicPort()).build();
 
     @Override
-    protected void configureWireMock(WireMockConfiguration configuration) {
-        configuration.extensions(new ResponseTemplateTransformer(true));
-    }
-
-    @Override
     public void configureApi(Api api) {
         if (api.getId().equals("my-api-redirect")) {
             api
                 .getFlows()
-                .forEach(flow -> {
+                .forEach(flow ->
                     flow
                         .getPre()
                         .stream()
                         .filter(step -> policyName().equals(step.getPolicy()))
                         .forEach(step ->
                             step.setConfiguration(step.getConfiguration().replace(REDIRECT_URL, LOCALHOST + redirectServer.getPort()))
-                        );
-                });
+                        )
+                );
         }
     }
 
     @Test
     @DeployApi("/apis/circuit-breaker.json")
     @DisplayName("Should open circuit when too many slow calls")
-    void shouldOpenCircuitWhenSlowCalls(WebClient client) {
+    void shouldOpenCircuitWhenSlowCalls(HttpClient client) {
         wiremock.stubFor(get("/endpoint/my_team").willReturn(ok("response from backend").withFixedDelay(750)));
 
-        TestObserver<HttpResponse<Buffer>> obs = client.get("/test/my_team").rxSend().test();
-
-        awaitTerminalEvent(obs);
-        obs
+        client
+            .rxRequest(HttpMethod.GET, "/test/my_team")
+            .flatMap(HttpClientRequest::rxSend)
+            .test()
+            .awaitDone(10, TimeUnit.SECONDS)
             .assertComplete()
             .assertValue(response -> {
                 assertThat(response.statusCode()).isEqualTo(200);
@@ -98,15 +93,19 @@ class CircuitBreakerPolicyIntegrationTest extends AbstractPolicyTest<CircuitBrea
 
         wiremock.stubFor(get("/endpoint/my_team").willReturn(ok("response from backend").withFixedDelay(750)));
 
-        obs = client.get("/test/my_team").rxSend().test();
-
-        awaitTerminalEvent(obs);
-        obs
-            .assertComplete()
-            .assertValue(response -> {
+        client
+            .rxRequest(HttpMethod.GET, "/test/my_team")
+            .flatMap(HttpClientRequest::rxSend)
+            .flatMapPublisher(response -> {
                 assertThat(response.statusCode()).isEqualTo(HttpStatusCode.SERVICE_UNAVAILABLE_503);
                 assertThat(response.statusMessage()).isEqualToIgnoringCase("Service Unavailable");
-                assertThat(response.bodyAsString()).isEqualTo(CircuitBreakerPolicy.CIRCUIT_BREAKER_OPEN_STATE_MESSAGE);
+                return response.toFlowable();
+            })
+            .test()
+            .awaitDone(10, TimeUnit.SECONDS)
+            .assertComplete()
+            .assertValue(responseBody -> {
+                assertThat(responseBody).hasToString(CircuitBreakerPolicy.CIRCUIT_BREAKER_OPEN_STATE_MESSAGE);
                 return true;
             })
             .assertNoErrors();
@@ -117,32 +116,40 @@ class CircuitBreakerPolicyIntegrationTest extends AbstractPolicyTest<CircuitBrea
     @Test
     @DeployApi("/apis/circuit-breaker.json")
     @DisplayName("Should open circuit when too many failures")
-    void shouldOpenCircuitWhenFailures(WebClient client) {
+    void shouldOpenCircuitWhenFailures(HttpClient client) {
         wiremock.stubFor(get("/endpoint").willReturn(aResponse().withStatus(505).withBody("response from backend")));
 
-        TestObserver<HttpResponse<Buffer>> obs = client.get("/test").rxSend().test();
-
-        awaitTerminalEvent(obs);
-        obs
-            .assertComplete()
-            .assertValue(response -> {
+        client
+            .rxRequest(HttpMethod.GET, "/test")
+            .flatMap(HttpClientRequest::rxSend)
+            .flatMapPublisher(response -> {
                 assertThat(response.statusCode()).isEqualTo(505);
-                assertThat(response.bodyAsString()).isEqualTo("response from backend");
+                return response.toFlowable();
+            })
+            .test()
+            .awaitDone(10, TimeUnit.SECONDS)
+            .assertComplete()
+            .assertValue(responseBody -> {
+                assertThat(responseBody).hasToString("response from backend");
                 return true;
             })
             .assertNoErrors();
 
         wiremock.stubFor(get("/endpoint").willReturn(aResponse().withStatus(505).withBody("response from backend")));
 
-        obs = client.get("/test").rxSend().test();
-
-        awaitTerminalEvent(obs);
-        obs
-            .assertComplete()
-            .assertValue(response -> {
+        client
+            .rxRequest(HttpMethod.GET, "/test")
+            .flatMap(HttpClientRequest::rxSend)
+            .flatMapPublisher(response -> {
                 assertThat(response.statusCode()).isEqualTo(HttpStatusCode.SERVICE_UNAVAILABLE_503);
                 assertThat(response.statusMessage()).isEqualToIgnoringCase("Service Unavailable");
-                assertThat(response.bodyAsString()).isEqualTo(CircuitBreakerPolicy.CIRCUIT_BREAKER_OPEN_STATE_MESSAGE);
+                return response.toFlowable();
+            })
+            .test()
+            .awaitDone(10, TimeUnit.SECONDS)
+            .assertComplete()
+            .assertValue(responseBody -> {
+                assertThat(responseBody).hasToString(CircuitBreakerPolicy.CIRCUIT_BREAKER_OPEN_STATE_MESSAGE);
                 return true;
             })
             .assertNoErrors();
@@ -153,17 +160,21 @@ class CircuitBreakerPolicyIntegrationTest extends AbstractPolicyTest<CircuitBrea
     @Test
     @DeployApi("/apis/circuit-breaker-redirect.json")
     @DisplayName("Should redirect to URL if opened circuit due to too many failures")
-    void shouldRedirectWhenCircuitOpen(WebClient client) {
+    void shouldRedirectWhenCircuitOpen(HttpClient client) {
         wiremock.stubFor(get("/endpoint").willReturn(aResponse().withStatus(505).withBody("response from backend")));
 
-        TestObserver<HttpResponse<Buffer>> obs = client.get("/circuit-redirect").rxSend().test();
-
-        awaitTerminalEvent(obs);
-        obs
-            .assertComplete()
-            .assertValue(response -> {
+        client
+            .rxRequest(HttpMethod.GET, "/circuit-redirect")
+            .flatMap(HttpClientRequest::rxSend)
+            .flatMapPublisher(response -> {
                 assertThat(response.statusCode()).isEqualTo(505);
-                assertThat(response.bodyAsString()).isEqualTo("response from backend");
+                return response.toFlowable();
+            })
+            .test()
+            .awaitDone(10, TimeUnit.SECONDS)
+            .assertComplete()
+            .assertValue(responseBody -> {
+                assertThat(responseBody).hasToString("response from backend");
                 return true;
             })
             .assertNoErrors();
@@ -171,14 +182,18 @@ class CircuitBreakerPolicyIntegrationTest extends AbstractPolicyTest<CircuitBrea
         wiremock.stubFor(get("/endpoint").willReturn(aResponse().withStatus(505).withBody("response from backend")));
         redirectServer.stubFor(get("/redirection").willReturn(ok("redirection went well")));
 
-        obs = client.get("/circuit-redirect").rxSend().test();
-
-        awaitTerminalEvent(obs);
-        obs
+        client
+            .rxRequest(HttpMethod.GET, "/circuit-redirect")
+            .flatMap(HttpClientRequest::rxSend)
+            .flatMapPublisher(response -> {
+                assertThat(response.statusCode()).isEqualTo(200);
+                return response.toFlowable();
+            })
+            .test()
+            .awaitDone(10, TimeUnit.SECONDS)
             .assertComplete()
-            .assertValue(response -> {
-                assertThat(response.statusCode()).isEqualTo(HttpStatusCode.OK_200);
-                assertThat(response.bodyAsString()).isEqualTo("redirection went well");
+            .assertValue(responseBody -> {
+                assertThat(responseBody).hasToString("redirection went well");
                 return true;
             })
             .assertNoErrors();

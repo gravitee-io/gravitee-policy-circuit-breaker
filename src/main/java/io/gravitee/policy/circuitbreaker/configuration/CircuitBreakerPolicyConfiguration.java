@@ -16,11 +16,13 @@
 package io.gravitee.policy.circuitbreaker.configuration;
 
 import io.gravitee.policy.api.PolicyConfiguration;
+import lombok.Data;
 
 /**
  * @author David BRASSELY (david.brassely at graviteesource.com)
  * @author GraviteeSource Team
  */
+@Data
 public class CircuitBreakerPolicyConfiguration implements PolicyConfiguration {
 
     private float failureRateThreshold;
@@ -34,52 +36,4 @@ public class CircuitBreakerPolicyConfiguration implements PolicyConfiguration {
     private int windowSize;
 
     private String redirectToURL;
-
-    public float getFailureRateThreshold() {
-        return failureRateThreshold;
-    }
-
-    public void setFailureRateThreshold(float failureRateThreshold) {
-        this.failureRateThreshold = failureRateThreshold;
-    }
-
-    public float getSlowCallRateThreshold() {
-        return slowCallRateThreshold;
-    }
-
-    public void setSlowCallRateThreshold(float slowCallRateThreshold) {
-        this.slowCallRateThreshold = slowCallRateThreshold;
-    }
-
-    public long getWaitDurationInOpenState() {
-        return waitDurationInOpenState;
-    }
-
-    public void setWaitDurationInOpenState(long waitDurationInOpenState) {
-        this.waitDurationInOpenState = waitDurationInOpenState;
-    }
-
-    public long getSlowCallDurationThreshold() {
-        return slowCallDurationThreshold;
-    }
-
-    public void setSlowCallDurationThreshold(long slowCallDurationThreshold) {
-        this.slowCallDurationThreshold = slowCallDurationThreshold;
-    }
-
-    public int getWindowSize() {
-        return windowSize;
-    }
-
-    public void setWindowSize(int windowSize) {
-        this.windowSize = windowSize;
-    }
-
-    public String getRedirectToURL() {
-        return redirectToURL;
-    }
-
-    public void setRedirectToURL(String redirectToURL) {
-        this.redirectToURL = redirectToURL;
-    }
 }
