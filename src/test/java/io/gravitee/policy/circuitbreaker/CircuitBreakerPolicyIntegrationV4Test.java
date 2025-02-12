@@ -30,28 +30,20 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.rxjava3.core.http.HttpClient;
 import io.vertx.rxjava3.core.http.HttpClientRequest;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.DisplayNameGenerator;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-/**
- * Circuit breaker internal behavior is based on a registry with {@link io.gravitee.gateway.api.ExecutionContext#ATTR_RESOLVED_PATH} as key.
- *
- * This means that the key is the path of the resolved flow for the call.
- * To avoid flakiness when running tests, it is preferable to deploy the API once per test, to avoid having one and only one instance of the policy and so, to avoid mixing circuit breaking statistics across tests.
- * @author Yann TAVERNIER (yann.tavernier at graviteesource.com)
- * @author GraviteeSource Team
- */
-@GatewayTest(v2ExecutionMode = ExecutionMode.V3)
-class CircuitBreakerPolicyIntegrationV3Test extends AbstractIntegrationTest {
+@GatewayTest(v2ExecutionMode = ExecutionMode.V4_EMULATION_ENGINE)
+class CircuitBreakerPolicyIntegrationV4Test extends AbstractIntegrationTest {
 
-    @Test
-    @DeployApi("/apis/v2/circuit-breaker.json")
-    void should_open_circuit_when_too_many_slow_calls(HttpClient client) {
+    @DeployApi({ "/apis/v2/circuit-breaker.json", "/apis/v4/circuit-breaker.json" })
+    @ParameterizedTest
+    @ValueSource(strings = { "/v2-circuit-breaker", "/v4-circuit-breaker" })
+    void should_open_circuit_when_too_many_slow_calls(String requestPath, HttpClient client) {
         wiremock.stubFor(get("/endpoint/my_team").willReturn(ok("response from backend").withFixedDelay(750)));
 
         client
-            .rxRequest(HttpMethod.GET, "/v2-circuit-breaker/my_team")
+            .rxRequest(HttpMethod.GET, requestPath + "/my_team")
             .flatMap(HttpClientRequest::rxSend)
             .test()
             .awaitDone(10, TimeUnit.SECONDS)
@@ -65,7 +57,7 @@ class CircuitBreakerPolicyIntegrationV3Test extends AbstractIntegrationTest {
         wiremock.stubFor(get("/endpoint/my_team").willReturn(ok("response from backend").withFixedDelay(750)));
 
         client
-            .rxRequest(HttpMethod.GET, "/v2-circuit-breaker/my_team")
+            .rxRequest(HttpMethod.GET, requestPath + "/my_team")
             .flatMap(HttpClientRequest::rxSend)
             .flatMapPublisher(response -> {
                 assertThat(response.statusCode()).isEqualTo(HttpStatusCode.SERVICE_UNAVAILABLE_503);
@@ -84,13 +76,14 @@ class CircuitBreakerPolicyIntegrationV3Test extends AbstractIntegrationTest {
         wiremock.verify(1, getRequestedFor(urlPathEqualTo("/endpoint/my_team")));
     }
 
-    @Test
-    @DeployApi("/apis/v2/circuit-breaker.json")
-    void should_open_circuit_when_too_many_failures(HttpClient client) {
+    @DeployApi({ "/apis/v2/circuit-breaker.json", "/apis/v4/circuit-breaker.json" })
+    @ParameterizedTest
+    @ValueSource(strings = { "/v2-circuit-breaker", "/v4-circuit-breaker" })
+    void should_open_circuit_when_too_many_failures(String requestPath, HttpClient client) {
         wiremock.stubFor(get("/endpoint").willReturn(aResponse().withStatus(505).withBody("response from backend")));
 
         client
-            .rxRequest(HttpMethod.GET, "/v2-circuit-breaker")
+            .rxRequest(HttpMethod.GET, requestPath)
             .flatMap(HttpClientRequest::rxSend)
             .flatMapPublisher(response -> {
                 assertThat(response.statusCode()).isEqualTo(505);
@@ -108,7 +101,7 @@ class CircuitBreakerPolicyIntegrationV3Test extends AbstractIntegrationTest {
         wiremock.stubFor(get("/endpoint").willReturn(aResponse().withStatus(505).withBody("response from backend")));
 
         client
-            .rxRequest(HttpMethod.GET, "/v2-circuit-breaker")
+            .rxRequest(HttpMethod.GET, requestPath)
             .flatMap(HttpClientRequest::rxSend)
             .flatMapPublisher(response -> {
                 assertThat(response.statusCode()).isEqualTo(HttpStatusCode.SERVICE_UNAVAILABLE_503);
@@ -127,13 +120,14 @@ class CircuitBreakerPolicyIntegrationV3Test extends AbstractIntegrationTest {
         wiremock.verify(1, getRequestedFor(urlPathEqualTo("/endpoint")));
     }
 
-    @Test
-    @DeployApi("/apis/v2/circuit-breaker-redirect.json")
-    void should_redirect_to_url_when_circuit_opens(HttpClient client) {
+    @DeployApi({ "/apis/v2/circuit-breaker-redirect.json", "/apis/v4/circuit-breaker-redirect.json" })
+    @ParameterizedTest
+    @ValueSource(strings = { "/v2-circuit-breaker-redirect", "/v4-circuit-breaker-redirect" })
+    void should_redirect_to_url_when_circuit_opens(String requestPath, HttpClient client) {
         wiremock.stubFor(get("/endpoint").willReturn(aResponse().withStatus(505).withBody("response from backend")));
 
         client
-            .rxRequest(HttpMethod.GET, "/v2-circuit-breaker-redirect")
+            .rxRequest(HttpMethod.GET, requestPath)
             .flatMap(HttpClientRequest::rxSend)
             .flatMapPublisher(response -> {
                 assertThat(response.statusCode()).isEqualTo(505);
@@ -152,7 +146,7 @@ class CircuitBreakerPolicyIntegrationV3Test extends AbstractIntegrationTest {
         redirectServer.stubFor(get("/redirection").willReturn(ok("redirection went well")));
 
         client
-            .rxRequest(HttpMethod.GET, "/v2-circuit-breaker-redirect")
+            .rxRequest(HttpMethod.GET, requestPath)
             .flatMap(HttpClientRequest::rxSend)
             .flatMapPublisher(response -> {
                 assertThat(response.statusCode()).isEqualTo(200);
