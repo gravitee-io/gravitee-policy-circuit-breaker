@@ -1,3 +1,20 @@
+# [2.0.0](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/compare/1.1.5...2.0.0) (2025-02-13)
+
+
+### chore
+
+* **deps:** bump gravitee-parent to 22.2.4 ([518d7df](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/518d7dfa4d7d052781dd77f93350706839230ce7))
+
+
+### Features
+
+* support reactive engine ([d7306bb](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/d7306bb8e45c56e73346f010ae76a8d4e3c1a9b5))
+
+
+### BREAKING CHANGES
+
+* **deps:** require JDK 17
+
 ## [1.1.5](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/compare/1.1.4...1.1.5) (2023-07-20)
 
 
