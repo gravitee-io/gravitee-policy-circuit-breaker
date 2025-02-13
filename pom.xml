@@ -38,7 +38,7 @@
         <gravitee-apim-bom.version>4.6.3</gravitee-apim-bom.version>
         <resilience4j-circuitbreaker.version>2.2.0</resilience4j-circuitbreaker.version>
 
-        <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
+        <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
         <!-- Property used by the publication job in CI-->
         <publish-folder-path>graviteeio-apim/plugins/policies</publish-folder-path>
     </properties>
