@@ -35,7 +35,7 @@
     </parent>
 
     <properties>
-        <gravitee-apim-bom.version>4.6.7</gravitee-apim-bom.version>
+        <gravitee-apim-bom.version>4.9.8</gravitee-apim-bom.version>
         <resilience4j-circuitbreaker.version>2.2.0</resilience4j-circuitbreaker.version>
 
         <maven-assembly-plugin.version>3.8.0</maven-assembly-plugin.version>
