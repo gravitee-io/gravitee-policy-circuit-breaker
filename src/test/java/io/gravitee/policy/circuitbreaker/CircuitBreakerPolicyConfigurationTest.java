@@ -62,6 +62,7 @@ class CircuitBreakerPolicyConfigurationTest {
         assertThat(config.getSlowCallDurationThreshold()).hasMillis(1000);
         assertThat(config.getWaitIntervalFunctionInOpenState().apply(1)).isEqualTo(1000L);
         assertThat(config.getSlidingWindowSize()).isEqualTo(100);
+        assertThat(config.getMinimumNumberOfCalls()).isEqualTo(1);
     }
 
     /**

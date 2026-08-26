@@ -16,6 +16,7 @@
 package io.gravitee.policy.circuitbreaker;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.gravitee.apim.gateway.tests.sdk.AbstractPolicyTest;
@@ -30,7 +31,11 @@ import io.gravitee.plugin.endpoint.http.proxy.HttpProxyEndpointConnectorFactory;
 import io.gravitee.plugin.entrypoint.EntrypointConnectorPlugin;
 import io.gravitee.plugin.entrypoint.http.proxy.HttpProxyEntrypointConnectorFactory;
 import io.gravitee.policy.circuitbreaker.configuration.CircuitBreakerPolicyConfiguration;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.rxjava3.core.http.HttpClient;
+import io.vertx.rxjava3.core.http.HttpClientRequest;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -76,6 +81,20 @@ public class AbstractIntegrationTest extends AbstractPolicyTest<CircuitBreakerPo
                     );
             }
         }
+    }
+
+    protected void assertCallReturns(HttpClient client, String requestPath, int expectedStatus) {
+        client
+            .rxRequest(HttpMethod.GET, requestPath)
+            .flatMap(HttpClientRequest::rxSend)
+            .test()
+            .awaitDone(10, TimeUnit.SECONDS)
+            .assertComplete()
+            .assertValue(response -> {
+                assertThat(response.statusCode()).isEqualTo(expectedStatus);
+                return true;
+            })
+            .assertNoErrors();
     }
 
     @Override

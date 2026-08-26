@@ -143,6 +143,21 @@ class CircuitBreakerPolicyIntegrationV4Test extends AbstractIntegrationTest {
         wiremock.verify(1, getRequestedFor(urlPathEqualTo("/endpoint")));
     }
 
+    @DeployApi({ "/apis/v2/circuit-breaker-minimum-calls.json", "/apis/v4/circuit-breaker-minimum-calls.json" })
+    @ParameterizedTest
+    @ValueSource(strings = { "/v2-circuit-breaker-minimum-calls", "/v4-circuit-breaker-minimum-calls" })
+    void should_open_circuit_only_once_the_minimum_number_of_calls_is_reached(String requestPath, HttpClient client) {
+        wiremock.stubFor(get("/endpoint").willReturn(ok("response from backend").withFixedDelay(200)));
+
+        for (int call = 0; call < 10; call++) {
+            assertCallReturns(client, requestPath, 200);
+        }
+
+        assertCallReturns(client, requestPath, HttpStatusCode.SERVICE_UNAVAILABLE_503);
+
+        wiremock.verify(10, getRequestedFor(urlPathEqualTo("/endpoint")));
+    }
+
     @DeployApi({ "/apis/v2/circuit-breaker-redirect.json", "/apis/v4/circuit-breaker-redirect.json" })
     @ParameterizedTest
     @ValueSource(strings = { "/v2-circuit-breaker-redirect", "/v4-circuit-breaker-redirect" })
