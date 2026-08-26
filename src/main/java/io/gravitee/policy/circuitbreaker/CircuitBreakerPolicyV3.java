@@ -90,21 +90,21 @@ public class CircuitBreakerPolicyV3 {
     private CircuitBreaker get(ExecutionContext context) {
         String resolvedPath = (String) context.getAttribute(ExecutionContext.ATTR_RESOLVED_PATH);
 
-        return registry.circuitBreaker(
-            resolvedPath,
-            () ->
-                CircuitBreakerConfig
-                    .custom()
-                    .failureRateThreshold(configuration.getFailureRateThreshold())
-                    .slowCallRateThreshold(configuration.getSlowCallRateThreshold())
-                    .slowCallDurationThreshold(Duration.ofMillis(configuration.getSlowCallDurationThreshold()))
-                    .waitDurationInOpenState(Duration.ofMillis(configuration.getWaitDurationInOpenState()))
-                    .permittedNumberOfCallsInHalfOpenState(1)
-                    .minimumNumberOfCalls(1)
-                    .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
-                    .slidingWindowSize(configuration.getWindowSize())
-                    .build()
-        );
+        return registry.circuitBreaker(resolvedPath, this::circuitBreakerConfig);
+    }
+
+    protected CircuitBreakerConfig circuitBreakerConfig() {
+        return CircuitBreakerConfig
+            .custom()
+            .failureRateThreshold(configuration.getFailureRateThreshold())
+            .slowCallRateThreshold(configuration.getSlowCallRateThreshold())
+            .slowCallDurationThreshold(Duration.ofMillis(configuration.getSlowCallDurationThreshold()))
+            .waitDurationInOpenState(Duration.ofMillis(configuration.getWaitDurationInOpenState()))
+            .permittedNumberOfCallsInHalfOpenState(1)
+            .minimumNumberOfCalls(1)
+            .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+            .slidingWindowSize(configuration.getWindowSize())
+            .build();
     }
 
     static class CircuitBreakerInvoker implements Invoker {

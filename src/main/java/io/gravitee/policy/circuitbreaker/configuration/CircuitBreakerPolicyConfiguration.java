@@ -25,15 +25,15 @@ import lombok.Data;
 @Data
 public class CircuitBreakerPolicyConfiguration implements PolicyConfiguration {
 
-    private float failureRateThreshold;
+    private float failureRateThreshold = 50;
 
-    private float slowCallRateThreshold;
+    private float slowCallRateThreshold = 100;
 
-    private long slowCallDurationThreshold;
+    private long slowCallDurationThreshold = 1000;
 
-    private long waitDurationInOpenState;
+    private long waitDurationInOpenState = 1000;
 
-    private int windowSize;
+    private int windowSize = 100;
 
     private String redirectToURL;
 }

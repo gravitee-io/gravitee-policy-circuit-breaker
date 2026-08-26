@@ -16,7 +16,6 @@
 package io.gravitee.policy.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.gravitee.common.http.HttpStatusCode;
 import io.gravitee.gateway.api.ExecutionContext;
 import io.gravitee.gateway.reactive.api.ExecutionFailure;
@@ -27,7 +26,6 @@ import io.gravitee.gateway.reactive.api.invoker.HttpInvoker;
 import io.gravitee.gateway.reactive.api.policy.http.HttpPolicy;
 import io.gravitee.policy.circuitbreaker.configuration.CircuitBreakerPolicyConfiguration;
 import io.reactivex.rxjava3.core.Completable;
-import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -81,21 +79,7 @@ public class CircuitBreakerPolicy extends CircuitBreakerPolicyV3 implements Http
     private CircuitBreaker get(HttpPlainExecutionContext ctx) {
         if (circuitBreaker == null) {
             String apiId = ctx.getAttribute(ExecutionContext.ATTR_API);
-            circuitBreaker =
-                CircuitBreaker.of(
-                    apiId,
-                    CircuitBreakerConfig
-                        .custom()
-                        .failureRateThreshold(configuration.getFailureRateThreshold())
-                        .slowCallRateThreshold(configuration.getSlowCallRateThreshold())
-                        .slowCallDurationThreshold(Duration.ofMillis(configuration.getSlowCallDurationThreshold()))
-                        .waitDurationInOpenState(Duration.ofMillis(configuration.getWaitDurationInOpenState()))
-                        .permittedNumberOfCallsInHalfOpenState(1)
-                        .minimumNumberOfCalls(1)
-                        .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
-                        .slidingWindowSize(configuration.getWindowSize())
-                        .build()
-                );
+            circuitBreaker = CircuitBreaker.of(apiId, circuitBreakerConfig());
         }
         return circuitBreaker;
     }
