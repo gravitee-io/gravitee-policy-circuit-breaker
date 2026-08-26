@@ -1,0 +1,8 @@
+rows:
+    - data:
+          plugin: "1.x"
+          apim: "4.5 and earlier"
+      deprecated: true
+    - data:
+          plugin: "2.x"
+          apim: "4.6 and above"

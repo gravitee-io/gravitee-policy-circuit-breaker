@@ -1,0 +1,4 @@
+rows:
+    - data:
+          key: "CIRCUIT_BREAKER_OPEN_STATE"
+          params: "failure_rate, slow_call_rate"
