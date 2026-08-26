@@ -101,29 +101,30 @@ public class CircuitBreakerPolicy extends CircuitBreakerPolicyV3 implements Http
 
         @Override
         public Completable invoke(HttpExecutionContext ctx) {
-            return delegate
-                .invoke(ctx)
-                .compose(upstream ->
-                    upstream
-                        .doOnComplete(() -> {
-                            long elapsedTime = System.currentTimeMillis() - ctx.metrics().getEndpointResponseTimeMs();
-                            int responseStatus = ctx.response().status();
+            return Completable.defer(() -> {
+                long startTime = System.currentTimeMillis();
 
-                            log.debug("Hook on Complete Elapsed time: {} ms", elapsedTime);
+                return delegate
+                    .invoke(ctx)
+                    .doOnComplete(() -> {
+                        long elapsedTime = System.currentTimeMillis() - startTime;
+                        int responseStatus = ctx.response().status();
 
-                            if (responseStatus >= HttpStatusCode.INTERNAL_SERVER_ERROR_500) {
-                                circuitBreaker.onError(elapsedTime, TimeUnit.MILLISECONDS, null);
-                            } else {
-                                circuitBreaker.onSuccess(elapsedTime, TimeUnit.MILLISECONDS);
-                            }
-                        })
-                        .doOnError(th -> {
-                            long elapsedTime = System.currentTimeMillis() - ctx.metrics().getEndpointResponseTimeMs();
-                            log.debug("Hook on Error Elapsed time: {} ms", elapsedTime);
-                            circuitBreaker.onError(elapsedTime, TimeUnit.MILLISECONDS, th);
-                        })
-                        .doOnDispose(circuitBreaker::releasePermission)
-                );
+                        log.debug("Hook on Complete Elapsed time: {} ms", elapsedTime);
+
+                        if (responseStatus >= HttpStatusCode.INTERNAL_SERVER_ERROR_500) {
+                            circuitBreaker.onError(elapsedTime, TimeUnit.MILLISECONDS, null);
+                        } else {
+                            circuitBreaker.onSuccess(elapsedTime, TimeUnit.MILLISECONDS);
+                        }
+                    })
+                    .doOnError(th -> {
+                        long elapsedTime = System.currentTimeMillis() - startTime;
+                        log.debug("Hook on Error Elapsed time: {} ms", elapsedTime);
+                        circuitBreaker.onError(elapsedTime, TimeUnit.MILLISECONDS, th);
+                    })
+                    .doOnDispose(circuitBreaker::releasePermission);
+            });
         }
     }
 }
