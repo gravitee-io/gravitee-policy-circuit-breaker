@@ -50,7 +50,7 @@ public class CircuitBreakerPolicy extends CircuitBreakerPolicyV3 implements Http
             var circuitBreaker = get(ctx);
             if (circuitBreaker.tryAcquirePermission()) {
                 HttpInvoker defaultInvoker = ctx.getInternalAttribute(InternalContextAttributes.ATTR_INTERNAL_INVOKER);
-                var circuitBreakerInvoker = new CircuitBreakerInvoker(defaultInvoker, circuitBreaker);
+                var circuitBreakerInvoker = new CircuitBreakerInvoker(defaultInvoker, circuitBreaker, configuration);
                 ctx.setInternalAttribute(InternalContextAttributes.ATTR_INTERNAL_INVOKER, circuitBreakerInvoker);
                 return Completable.complete();
             }
@@ -87,15 +87,26 @@ public class CircuitBreakerPolicy extends CircuitBreakerPolicyV3 implements Http
 
         private final HttpInvoker delegate;
         private final CircuitBreaker circuitBreaker;
+        private final CircuitBreakerPolicyConfiguration configuration;
 
-        public CircuitBreakerInvoker(HttpInvoker delegate, CircuitBreaker circuitBreaker) {
+        public CircuitBreakerInvoker(HttpInvoker delegate, CircuitBreaker circuitBreaker, CircuitBreakerPolicyConfiguration configuration) {
             this.delegate = delegate;
             this.circuitBreaker = circuitBreaker;
+            this.configuration = configuration;
         }
 
         @Override
         public String getId() {
             return "circuit-breaker-invoker";
+        }
+
+        /**
+         * A disposed chain does not say why it was cancelled: a gateway request timeout and a client giving up look
+         * the same. Only interruptions longer than the configured slow call threshold are recorded, since beyond it the
+         * call is already considered abnormal.
+         */
+        private boolean isInterruptionWorthRecording(long elapsedTime) {
+            return configuration.isRecordInterruptedCallsAsFailures() && elapsedTime > configuration.getSlowCallDurationThreshold();
         }
 
         @Override
@@ -122,7 +133,16 @@ public class CircuitBreakerPolicy extends CircuitBreakerPolicyV3 implements Http
                         log.debug("Hook on Error Elapsed time: {} ms", elapsedTime);
                         circuitBreaker.onError(elapsedTime, TimeUnit.MILLISECONDS, th);
                     })
-                    .doOnDispose(circuitBreaker::releasePermission);
+                    .doOnDispose(() -> {
+                        long elapsedTime = System.currentTimeMillis() - startTime;
+                        log.debug("Hook on Dispose Elapsed time: {} ms", elapsedTime);
+
+                        if (isInterruptionWorthRecording(elapsedTime)) {
+                            circuitBreaker.onError(elapsedTime, TimeUnit.MILLISECONDS, null);
+                        } else {
+                            circuitBreaker.releasePermission();
+                        }
+                    });
             });
         }
     }

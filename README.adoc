@@ -48,5 +48,6 @@ You can configure the policy with the following options:
 |minimumNumberOfCalls||The minimum number of calls required, per sliding window period, before the circuit breaker can compute the error and slow call rates. A value greater than `windowSize` is capped to `windowSize`.|integer (min. 1)|1
 |waitDurationInOpenState||The duration in millisecond before switching from open circuit to half-open.|integer (min. 1)|1000
 |permittedNumberOfCallsInHalfOpenState||The number of calls allowed through while the circuit breaker is half-open. The circuit closes again only once they have all been recorded.|integer (min. 1)|1
+|recordInterruptedCallsAsFailures||Record a call interrupted before the backend answered, a gateway request timeout for instance, as a failure when it lasted longer than `slowCallDurationThreshold`. Shorter interruptions, typically a client giving up, stay ignored.|boolean|false
 |redirectToURL||Redirect the call to the given URL instead of returning '503 Service Unavailable' status (supports EL)|string|
 |===

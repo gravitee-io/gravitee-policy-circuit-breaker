@@ -55,6 +55,12 @@
             "default": 1,
             "minimum": 1
         },
+        "recordInterruptedCallsAsFailures": {
+            "title": "Record interrupted calls as failures",
+            "description": "Record a call interrupted before the backend answered — a gateway request timeout for instance — as a failure, provided it lasted longer than the slow call duration threshold. Shorter interruptions, typically a client giving up, stay ignored.",
+            "type": "boolean",
+            "default": false
+        },
         "redirectToURL": {
             "title": "Redirect call to URL",
             "description": "Redirect the call to the given URL instead of returning a '503 Service Unavailable' status (supports EL).",
