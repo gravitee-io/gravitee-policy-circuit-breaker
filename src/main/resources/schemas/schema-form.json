@@ -34,6 +34,13 @@
             "default": 100,
             "minimum": 1
         },
+        "minimumNumberOfCalls": {
+            "title": "Minimum number of calls",
+            "description": "The minimum number of calls required, per sliding window period, before the circuit breaker can compute the error and slow call rates. A value greater than the sliding window size is capped to that size.",
+            "type": "integer",
+            "default": 1,
+            "minimum": 1
+        },
         "waitDurationInOpenState": {
             "title": "Wait duration in open state (in millis)",
             "description": "A fixed wait duration which controls how long the circuit breaker should stay open, before it switches to half open.",

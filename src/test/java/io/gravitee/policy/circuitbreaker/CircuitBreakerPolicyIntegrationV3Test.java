@@ -150,6 +150,20 @@ class CircuitBreakerPolicyIntegrationV3Test extends AbstractIntegrationTest {
     }
 
     @Test
+    @DeployApi("/apis/v2/circuit-breaker-minimum-calls.json")
+    void should_open_circuit_only_once_the_minimum_number_of_calls_is_reached(HttpClient client) {
+        wiremock.stubFor(get("/endpoint").willReturn(ok("response from backend").withFixedDelay(200)));
+
+        for (int call = 0; call < 10; call++) {
+            assertCallReturns(client, "/v2-circuit-breaker-minimum-calls", 200);
+        }
+
+        assertCallReturns(client, "/v2-circuit-breaker-minimum-calls", HttpStatusCode.SERVICE_UNAVAILABLE_503);
+
+        wiremock.verify(10, getRequestedFor(urlPathEqualTo("/endpoint")));
+    }
+
+    @Test
     @DeployApi("/apis/v2/circuit-breaker-redirect.json")
     void should_redirect_to_url_when_circuit_opens(HttpClient client) {
         wiremock.stubFor(get("/endpoint").willReturn(aResponse().withStatus(505).withBody("response from backend")));

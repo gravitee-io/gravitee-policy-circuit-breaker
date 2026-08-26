@@ -35,5 +35,7 @@ public class CircuitBreakerPolicyConfiguration implements PolicyConfiguration {
 
     private int windowSize = 100;
 
+    private int minimumNumberOfCalls = 1;
+
     private String redirectToURL;
 }

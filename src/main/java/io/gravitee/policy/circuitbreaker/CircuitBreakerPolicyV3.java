@@ -101,7 +101,7 @@ public class CircuitBreakerPolicyV3 {
             .slowCallDurationThreshold(Duration.ofMillis(configuration.getSlowCallDurationThreshold()))
             .waitDurationInOpenState(Duration.ofMillis(configuration.getWaitDurationInOpenState()))
             .permittedNumberOfCallsInHalfOpenState(1)
-            .minimumNumberOfCalls(1)
+            .minimumNumberOfCalls(configuration.getMinimumNumberOfCalls())
             .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
             .slidingWindowSize(configuration.getWindowSize())
             .build();
