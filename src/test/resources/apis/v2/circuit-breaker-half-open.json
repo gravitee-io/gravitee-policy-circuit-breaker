@@ -1,0 +1,48 @@
+{
+    "id": "v2-circuit-breaker-half-open",
+    "name": "v2-circuit-breaker-half-open",
+    "gravitee": "2.0.0",
+    "proxy": {
+        "context_path": "/v2-circuit-breaker-half-open",
+        "endpoints": [
+            {
+                "name": "default",
+                "target": "http://localhost:8080/endpoint",
+                "http": {
+                    "connectTimeout": 3000,
+                    "readTimeout": 60000
+                }
+            }
+        ]
+    },
+    "flows": [
+        {
+            "name": "flow-1",
+            "methods": ["GET"],
+            "enabled": true,
+            "path-operator": {
+                "path": "/",
+                "operator": "STARTS_WITH"
+            },
+            "pre": [
+                {
+                    "name": "Circuit breaker",
+                    "description": "",
+                    "enabled": true,
+                    "policy": "policy-circuit-breaker",
+                    "configuration": {
+                        "failureRateThreshold": 100,
+                        "slowCallRateThreshold": 100,
+                        "slowCallDurationThreshold": 100,
+                        "windowSize": 3,
+                        "minimumNumberOfCalls": 3,
+                        "waitDurationInOpenState": 1000,
+                        "permittedNumberOfCallsInHalfOpenState": 3,
+                        "redirectToURL": ""
+                    }
+                }
+            ],
+            "post": []
+        }
+    ]
+}

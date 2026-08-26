@@ -33,6 +33,8 @@ public class CircuitBreakerPolicyConfiguration implements PolicyConfiguration {
 
     private long waitDurationInOpenState = 1000;
 
+    private int permittedNumberOfCallsInHalfOpenState = 1;
+
     private int windowSize = 100;
 
     private int minimumNumberOfCalls = 1;
