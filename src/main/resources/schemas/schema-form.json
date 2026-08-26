@@ -48,6 +48,13 @@
             "default": 1000,
             "minimum": 1
         },
+        "permittedNumberOfCallsInHalfOpenState": {
+            "title": "Permitted number of calls in half-open state",
+            "description": "The number of calls allowed through while the circuit breaker is half-open. The circuit closes again only once they have all been recorded, so a single failing call no longer condemns the circuit for a whole cycle.",
+            "type": "integer",
+            "default": 1,
+            "minimum": 1
+        },
         "redirectToURL": {
             "title": "Redirect call to URL",
             "description": "Redirect the call to the given URL instead of returning a '503 Service Unavailable' status (supports EL).",

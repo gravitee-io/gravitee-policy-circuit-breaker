@@ -158,6 +158,28 @@ class CircuitBreakerPolicyIntegrationV4Test extends AbstractIntegrationTest {
         wiremock.verify(10, getRequestedFor(urlPathEqualTo("/endpoint")));
     }
 
+    @DeployApi({ "/apis/v2/circuit-breaker-half-open.json", "/apis/v4/circuit-breaker-half-open.json" })
+    @ParameterizedTest
+    @ValueSource(strings = { "/v2-circuit-breaker-half-open", "/v4-circuit-breaker-half-open" })
+    void should_wait_for_every_permitted_half_open_call_before_deciding(String requestPath, HttpClient client) throws InterruptedException {
+        wiremock.stubFor(get("/endpoint/slow").willReturn(ok("response from backend").withFixedDelay(200)));
+        wiremock.stubFor(get("/endpoint/fast").willReturn(ok("response from backend")));
+
+        for (int call = 0; call < 3; call++) {
+            assertCallReturns(client, requestPath + "/slow", 200);
+        }
+        assertCallReturns(client, requestPath + "/fast", HttpStatusCode.SERVICE_UNAVAILABLE_503);
+
+        TimeUnit.MILLISECONDS.sleep(1200);
+
+        // the three permitted calls are all recorded before the circuit breaker decides, so the slow one alone does not reopen it
+        assertCallReturns(client, requestPath + "/slow", 200);
+        assertCallReturns(client, requestPath + "/fast", 200);
+        assertCallReturns(client, requestPath + "/fast", 200);
+
+        assertCallReturns(client, requestPath + "/fast", 200);
+    }
+
     @DeployApi({ "/apis/v2/circuit-breaker-redirect.json", "/apis/v4/circuit-breaker-redirect.json" })
     @ParameterizedTest
     @ValueSource(strings = { "/v2-circuit-breaker-redirect", "/v4-circuit-breaker-redirect" })

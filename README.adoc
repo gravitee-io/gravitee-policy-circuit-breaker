@@ -47,5 +47,6 @@ You can configure the policy with the following options:
 |windowSize|X|The size of the sliding window which is used to record the outcome of calls when the circuit is closed.|integer (min. 1)|100
 |minimumNumberOfCalls||The minimum number of calls required, per sliding window period, before the circuit breaker can compute the error and slow call rates. A value greater than `windowSize` is capped to `windowSize`.|integer (min. 1)|1
 |waitDurationInOpenState||The duration in millisecond before switching from open circuit to half-open.|integer (min. 1)|1000
+|permittedNumberOfCallsInHalfOpenState||The number of calls allowed through while the circuit breaker is half-open. The circuit closes again only once they have all been recorded.|integer (min. 1)|1
 |redirectToURL||Redirect the call to the given URL instead of returning '503 Service Unavailable' status (supports EL)|string|
 |===

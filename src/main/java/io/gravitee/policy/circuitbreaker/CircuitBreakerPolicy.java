@@ -48,7 +48,6 @@ public class CircuitBreakerPolicy extends CircuitBreakerPolicyV3 implements Http
     public Completable onRequest(HttpPlainExecutionContext ctx) {
         return Completable.defer(() -> {
             var circuitBreaker = get(ctx);
-
             if (circuitBreaker.tryAcquirePermission()) {
                 HttpInvoker defaultInvoker = ctx.getInternalAttribute(InternalContextAttributes.ATTR_INTERNAL_INVOKER);
                 var circuitBreakerInvoker = new CircuitBreakerInvoker(defaultInvoker, circuitBreaker);
