@@ -1,0 +1,20 @@
+genExamples: []
+rawExamples:
+    - title: Open the circuit once half of the last ten calls are slow or failing
+      templateRef: v4-api-proxy
+      language: json
+      properties:
+          phase: request
+      file: .docgen/examples/slow-calls.json
+    - title: Redirect to a fallback backend instead of returning a 503
+      templateRef: v4-api-proxy
+      language: json
+      properties:
+          phase: request
+      file: .docgen/examples/redirect.json
+    - title: Take calls killed by the gateway request timeout into account
+      templateRef: v4-api-proxy
+      language: json
+      properties:
+          phase: request
+      file: .docgen/examples/interrupted-calls.json

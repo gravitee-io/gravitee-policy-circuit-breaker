@@ -1,0 +1,10 @@
+{
+    "failureRateThreshold": 50,
+    "slowCallRateThreshold": 50,
+    "slowCallDurationThreshold": 500,
+    "windowSize": 10,
+    "minimumNumberOfCalls": 10,
+    "waitDurationInOpenState": 10000,
+    "permittedNumberOfCallsInHalfOpenState": 3,
+    "redirectToURL": "https://fallback.example.com/api"
+}
