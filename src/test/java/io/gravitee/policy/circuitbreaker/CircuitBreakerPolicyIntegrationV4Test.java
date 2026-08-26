@@ -79,6 +79,29 @@ class CircuitBreakerPolicyIntegrationV4Test extends AbstractIntegrationTest {
     @DeployApi({ "/apis/v2/circuit-breaker.json", "/apis/v4/circuit-breaker.json" })
     @ParameterizedTest
     @ValueSource(strings = { "/v2-circuit-breaker", "/v4-circuit-breaker" })
+    void should_keep_circuit_closed_when_calls_are_fast_and_successful(String requestPath, HttpClient client) {
+        wiremock.stubFor(get("/endpoint").willReturn(ok("response from backend")));
+
+        for (int call = 0; call < 3; call++) {
+            client
+                .rxRequest(HttpMethod.GET, requestPath)
+                .flatMap(HttpClientRequest::rxSend)
+                .test()
+                .awaitDone(10, TimeUnit.SECONDS)
+                .assertComplete()
+                .assertValue(response -> {
+                    assertThat(response.statusCode()).isEqualTo(200);
+                    return true;
+                })
+                .assertNoErrors();
+        }
+
+        wiremock.verify(3, getRequestedFor(urlPathEqualTo("/endpoint")));
+    }
+
+    @DeployApi({ "/apis/v2/circuit-breaker.json", "/apis/v4/circuit-breaker.json" })
+    @ParameterizedTest
+    @ValueSource(strings = { "/v2-circuit-breaker", "/v4-circuit-breaker" })
     void should_open_circuit_when_too_many_failures(String requestPath, HttpClient client) {
         wiremock.stubFor(get("/endpoint").willReturn(aResponse().withStatus(505).withBody("response from backend")));
 
