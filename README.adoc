@@ -42,9 +42,9 @@ You can configure the policy with the following options:
 |Property |Required |Description |Type |Default
 
 |failureRateThreshold|X|Failure rate threshold before the circuit breaker switches to open state. A failure represents a response's status code >= 500. The threshold is expressed as a percentage.|integer (min. 0, max.100)|50
-|slowCallRateThreshold|X|Slow call rate threshold before the circuit breaker switches to open state. A slow call is represented by a response time greater than the configured `slowCallDurationThreshold`. The threshold is expressed as a percentage.|integer (min. 0, max.100)|50
+|slowCallRateThreshold|X|Slow call rate threshold before the circuit breaker switches to open state. A slow call is represented by a response time greater than the configured `slowCallDurationThreshold`. The threshold is expressed as a percentage.|integer (min. 0, max.100)|100
 |slowCallDurationThreshold|X|The duration threshold above which a call is considered as slow, increasing `slowCallRateThreshold`. The duration is expressed in milliseconds.|integer (min. 1)|1000
-|windowSize|X|The size of the sliding window which is used to record the outcome of calls when the circuit is closed.|integer (min. 0)|100
+|windowSize|X|The size of the sliding window which is used to record the outcome of calls when the circuit is closed.|integer (min. 1)|100
 |waitDurationInOpenState||The duration in millisecond before switching from open circuit to half-open.|integer (min. 1)|1000
 |redirectToURL||Redirect the call to the given URL instead of returning '503 Service Unavailable' status (supports EL)|string|
 |===
