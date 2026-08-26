@@ -39,5 +39,7 @@ public class CircuitBreakerPolicyConfiguration implements PolicyConfiguration {
 
     private int minimumNumberOfCalls = 1;
 
+    private boolean recordInterruptedCallsAsFailures = false;
+
     private String redirectToURL;
 }

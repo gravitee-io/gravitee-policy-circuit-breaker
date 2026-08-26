@@ -1,0 +1,76 @@
+{
+    "id": "circuit-breaker-interrupted",
+    "name": "circuit-breaker-interrupted",
+    "apiVersion": "1.0",
+    "definitionVersion": "4.0.0",
+    "type": "proxy",
+    "analytics": {
+        "enabled": false
+    },
+    "listeners": [
+        {
+            "type": "http",
+            "paths": [
+                {
+                    "path": "/circuit-breaker-interrupted"
+                }
+            ],
+            "entrypoints": [
+                {
+                    "type": "http-proxy"
+                }
+            ]
+        }
+    ],
+    "endpointGroups": [
+        {
+            "name": "default",
+            "type": "http-proxy",
+            "endpoints": [
+                {
+                    "name": "default",
+                    "type": "http-proxy",
+                    "weight": 1,
+                    "inheritConfiguration": false,
+                    "configuration": {
+                        "target": "http://localhost:8080/endpoint"
+                    }
+                }
+            ]
+        }
+    ],
+    "flows": [
+        {
+            "name": "flow-1",
+            "enabled": true,
+            "selectors": [
+                {
+                    "type": "http",
+                    "path": "/",
+                    "pathOperator": "STARTS_WITH"
+                }
+            ],
+            "request": [
+                {
+                    "name": "Circuit breaker",
+                    "description": "",
+                    "enabled": true,
+                    "policy": "policy-circuit-breaker",
+                    "configuration": {
+                        "failureRateThreshold": 100,
+                        "slowCallRateThreshold": 100,
+                        "slowCallDurationThreshold": 100,
+                        "windowSize": 1,
+                        "minimumNumberOfCalls": 1,
+                        "waitDurationInOpenState": 50000,
+                        "recordInterruptedCallsAsFailures": true,
+                        "redirectToURL": ""
+                    }
+                }
+            ],
+            "response": [],
+            "subscribe": [],
+            "publish": []
+        }
+    ]
+}
