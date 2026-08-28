@@ -99,40 +99,43 @@ public class CircuitBreakerPolicy extends CircuitBreakerPolicyV3 implements Http
          * the same. Only interruptions longer than the configured slow call threshold are recorded, since beyond it the
          * call is already considered abnormal.
          */
-        private boolean isInterruptionWorthRecording(long elapsedTime) {
-            return configuration.isRecordInterruptedCallsAsFailures() && elapsedTime > configuration.getSlowCallDurationThreshold();
+        private boolean isInterruptionWorthRecording(long elapsedTimeNanos) {
+            return (
+                configuration.isRecordInterruptedCallsAsFailures() &&
+                elapsedTimeNanos > TimeUnit.MILLISECONDS.toNanos(configuration.getSlowCallDurationThreshold())
+            );
         }
 
         @Override
         public Completable invoke(HttpExecutionContext ctx) {
             return Completable.defer(() -> {
-                long startTime = System.currentTimeMillis();
+                long startTime = System.nanoTime();
 
                 return delegate
                     .invoke(ctx)
                     .doOnComplete(() -> {
-                        long elapsedTime = System.currentTimeMillis() - startTime;
+                        long elapsedTimeNanos = System.nanoTime() - startTime;
                         int responseStatus = ctx.response().status();
 
-                        log.debug("Hook on Complete Elapsed time: {} ms", elapsedTime);
+                        log.debug("Hook on Complete Elapsed time: {} ms", TimeUnit.NANOSECONDS.toMillis(elapsedTimeNanos));
 
                         if (responseStatus >= HttpStatusCode.INTERNAL_SERVER_ERROR_500) {
-                            circuitBreaker.onError(elapsedTime, TimeUnit.MILLISECONDS, null);
+                            circuitBreaker.onError(elapsedTimeNanos, TimeUnit.NANOSECONDS, null);
                         } else {
-                            circuitBreaker.onSuccess(elapsedTime, TimeUnit.MILLISECONDS);
+                            circuitBreaker.onSuccess(elapsedTimeNanos, TimeUnit.NANOSECONDS);
                         }
                     })
                     .doOnError(th -> {
-                        long elapsedTime = System.currentTimeMillis() - startTime;
-                        log.debug("Hook on Error Elapsed time: {} ms", elapsedTime);
-                        circuitBreaker.onError(elapsedTime, TimeUnit.MILLISECONDS, th);
+                        long elapsedTimeNanos = System.nanoTime() - startTime;
+                        log.debug("Hook on Error Elapsed time: {} ms", TimeUnit.NANOSECONDS.toMillis(elapsedTimeNanos));
+                        circuitBreaker.onError(elapsedTimeNanos, TimeUnit.NANOSECONDS, th);
                     })
                     .doOnDispose(() -> {
-                        long elapsedTime = System.currentTimeMillis() - startTime;
-                        log.debug("Hook on Dispose Elapsed time: {} ms", elapsedTime);
+                        long elapsedTimeNanos = System.nanoTime() - startTime;
+                        log.debug("Hook on Dispose Elapsed time: {} ms", TimeUnit.NANOSECONDS.toMillis(elapsedTimeNanos));
 
-                        if (isInterruptionWorthRecording(elapsedTime)) {
-                            circuitBreaker.onError(elapsedTime, TimeUnit.MILLISECONDS, null);
+                        if (isInterruptionWorthRecording(elapsedTimeNanos)) {
+                            circuitBreaker.onError(elapsedTimeNanos, TimeUnit.NANOSECONDS, null);
                         } else {
                             circuitBreaker.releasePermission();
                         }
