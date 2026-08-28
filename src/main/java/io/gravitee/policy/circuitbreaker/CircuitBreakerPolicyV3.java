@@ -90,7 +90,15 @@ public class CircuitBreakerPolicyV3 {
     private CircuitBreaker get(ExecutionContext context) {
         String resolvedPath = (String) context.getAttribute(ExecutionContext.ATTR_RESOLVED_PATH);
 
-        return registry.circuitBreaker(resolvedPath, this::circuitBreakerConfig);
+        return circuitBreaker(resolvedPath);
+    }
+
+    /**
+     * Circuits are held by a registry rather than by a field, so that concurrent requests all share the one circuit
+     * their key maps to instead of racing to create their own.
+     */
+    protected CircuitBreaker circuitBreaker(String key) {
+        return registry.circuitBreaker(key, this::circuitBreakerConfig);
     }
 
     protected CircuitBreakerConfig circuitBreakerConfig() {

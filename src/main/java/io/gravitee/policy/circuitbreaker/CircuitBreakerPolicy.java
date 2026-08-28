@@ -33,8 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CircuitBreakerPolicy extends CircuitBreakerPolicyV3 implements HttpPolicy {
 
-    private CircuitBreaker circuitBreaker;
-
     public CircuitBreakerPolicy(CircuitBreakerPolicyConfiguration configuration) {
         super(configuration);
     }
@@ -76,11 +74,7 @@ public class CircuitBreakerPolicy extends CircuitBreakerPolicyV3 implements Http
     }
 
     private CircuitBreaker get(HttpPlainExecutionContext ctx) {
-        if (circuitBreaker == null) {
-            String apiId = ctx.getAttribute(ExecutionContext.ATTR_API);
-            circuitBreaker = CircuitBreaker.of(apiId, circuitBreakerConfig());
-        }
-        return circuitBreaker;
+        return circuitBreaker(ctx.getAttribute(ExecutionContext.ATTR_API));
     }
 
     static class CircuitBreakerInvoker implements HttpInvoker {
