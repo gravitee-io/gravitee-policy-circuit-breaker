@@ -64,6 +64,7 @@ class CircuitBreakerPolicyConfigurationTest {
         assertThat(config.getSlidingWindowSize()).isEqualTo(100);
         assertThat(config.getMinimumNumberOfCalls()).isEqualTo(1);
         assertThat(config.getPermittedNumberOfCallsInHalfOpenState()).isEqualTo(1);
+        assertThat(config.getMaxWaitDurationInHalfOpenState()).hasMillis(0);
     }
 
     /**

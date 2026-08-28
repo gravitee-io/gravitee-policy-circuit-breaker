@@ -18,6 +18,12 @@ through. It closes again only once all of them have been recorded and the rates 
 that the half-open decision uses `min(minimumNumberOfCalls, permittedNumberOfCallsInHalfOpenState)` as its minimum:
 raising the number of permitted calls without raising `minimumNumberOfCalls` changes nothing.
 
+By default the circuit breaker waits indefinitely for those permitted calls to be recorded. A call that is allowed
+through but never reaches the backend — a later policy interrupting the request, another policy replacing the invoker —
+is never recorded, so the circuit stays half-open and answers every subsequent call with a `503` until the API is
+redeployed. Set `maxWaitDurationInHalfOpenState` to a non-zero duration to bound that wait: once it elapses the circuit
+switches back to open on its own, and a new open then half-open cycle starts.
+
 ## Interrupted calls
 
 A call cancelled before the backend answered — a gateway request timeout, a client giving up — is ignored by default:

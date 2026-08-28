@@ -28,6 +28,12 @@ through. It closes again only once all of them have been recorded and the rates 
 that the half-open decision uses `min(minimumNumberOfCalls, permittedNumberOfCallsInHalfOpenState)` as its minimum:
 raising the number of permitted calls without raising `minimumNumberOfCalls` changes nothing.
 
+By default the circuit breaker waits indefinitely for those permitted calls to be recorded. A call that is allowed
+through but never reaches the backend — a later policy interrupting the request, another policy replacing the invoker —
+is never recorded, so the circuit stays half-open and answers every subsequent call with a `503` until the API is
+redeployed. Set `maxWaitDurationInHalfOpenState` to a non-zero duration to bound that wait: once it elapses the circuit
+switches back to open on its own, and a new open then half-open cycle starts.
+
 ## Interrupted calls
 
 A call cancelled before the backend answered — a gateway request timeout, a client giving up — is ignored by default:
@@ -84,6 +90,7 @@ Strikethrough text indicates that a version is deprecated.
 | Name <br>`json name`  | Type <br>`constraint`  | Mandatory  | Default  | Description  |
 |:----------------------|:-----------------------|:----------:|:---------|:-------------|
 | Failure rate threshold<br>`failureRateThreshold`| integer<br>`[0, 100]`| ✅| `50`| Failure (status code >= 500) rate threshold before the circuit breaker switches to the open state.|
+| Maximum wait duration in half-open state (in millis)<br>`maxWaitDurationInHalfOpenState`| integer<br>`[0, +Inf]`|  | `0`| The longest the circuit breaker may stay half-open before switching back to open on its own. Zero, the default, means it waits indefinitely for the permitted calls to be recorded. Set it to a non-zero value to guarantee the circuit always leaves the half-open state, even if a permitted call is never recorded.|
 | Minimum number of calls<br>`minimumNumberOfCalls`| integer<br>`[1, +Inf]`|  | `1`| The minimum number of calls required, per sliding window period, before the circuit breaker can compute the error and slow call rates. A value greater than the sliding window size is capped to that size.|
 | Permitted number of calls in half-open state<br>`permittedNumberOfCallsInHalfOpenState`| integer<br>`[1, +Inf]`|  | `1`| The number of calls allowed through while the circuit breaker is half-open. The circuit closes again only once they have all been recorded, so a single failing call no longer condemns the circuit for a whole cycle.|
 | Record interrupted calls as failures<br>`recordInterruptedCallsAsFailures`| boolean|  | | Record a call interrupted before the backend answered — a gateway request timeout for instance — as a failure, provided it lasted longer than the slow call duration threshold. Shorter interruptions, typically a client giving up, stay ignored.|
