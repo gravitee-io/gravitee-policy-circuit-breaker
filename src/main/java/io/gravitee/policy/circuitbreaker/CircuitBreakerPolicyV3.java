@@ -128,6 +128,8 @@ public class CircuitBreakerPolicyV3 {
 
         @Override
         public void invoke(ExecutionContext context, ReadStream<Buffer> stream, Handler<ProxyConnection> connectionHandler) {
+            long startTimeNanos = System.nanoTime();
+
             decorated.invoke(
                 context,
                 stream,
@@ -147,7 +149,7 @@ public class CircuitBreakerPolicyV3 {
                         @Override
                         public ProxyConnection responseHandler(Handler<ProxyResponse> responseHandler) {
                             return proxyConnection.responseHandler(
-                                new CircuitBreakerResponseHandler(responseHandler, context, circuitBreaker)
+                                new CircuitBreakerResponseHandler(responseHandler, startTimeNanos, circuitBreaker)
                             );
                         }
                     };
@@ -161,24 +163,24 @@ public class CircuitBreakerPolicyV3 {
     static class CircuitBreakerResponseHandler implements Handler<ProxyResponse> {
 
         private final Handler<ProxyResponse> responseHandler;
-        private final ExecutionContext context;
+        private final long startTimeNanos;
         private final CircuitBreaker circuitBreaker;
 
-        CircuitBreakerResponseHandler(Handler<ProxyResponse> responseHandler, ExecutionContext context, CircuitBreaker circuitBreaker) {
+        CircuitBreakerResponseHandler(Handler<ProxyResponse> responseHandler, long startTimeNanos, CircuitBreaker circuitBreaker) {
             this.responseHandler = responseHandler;
-            this.context = context;
+            this.startTimeNanos = startTimeNanos;
             this.circuitBreaker = circuitBreaker;
         }
 
         @Override
         public void handle(ProxyResponse proxyResponse) {
-            long elapsedTime = System.currentTimeMillis() - context.request().metrics().getApiResponseTimeMs();
+            long elapsedTimeNanos = System.nanoTime() - startTimeNanos;
             int status = proxyResponse.status();
 
             if (status >= HttpStatusCode.INTERNAL_SERVER_ERROR_500) {
-                circuitBreaker.onError(elapsedTime, TimeUnit.MILLISECONDS, null);
+                circuitBreaker.onError(elapsedTimeNanos, TimeUnit.NANOSECONDS, null);
             } else {
-                circuitBreaker.onSuccess(elapsedTime, TimeUnit.MILLISECONDS);
+                circuitBreaker.onSuccess(elapsedTimeNanos, TimeUnit.NANOSECONDS);
             }
 
             responseHandler.handle(proxyResponse);
