@@ -51,8 +51,7 @@ class CircuitBreakerPolicyTest {
         var barrier = new CyclicBarrier(CONCURRENT_REQUESTS);
 
         try (ExecutorService executor = Executors.newFixedThreadPool(CONCURRENT_REQUESTS)) {
-            List<Future<CircuitBreaker>> circuits = IntStream
-                .range(0, CONCURRENT_REQUESTS)
+            List<Future<CircuitBreaker>> circuits = IntStream.range(0, CONCURRENT_REQUESTS)
                 .mapToObj(request ->
                     executor.submit(() -> {
                         barrier.await();

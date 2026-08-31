@@ -75,8 +75,9 @@ class CircuitBreakerPolicyV3Test {
             );
 
         assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
-        new CircuitBreakerPolicyV3.CircuitBreakerInvoker(backend, circuitBreaker)
-            .invoke(context, null, connection -> connection.responseHandler(response -> {}));
+        new CircuitBreakerPolicyV3.CircuitBreakerInvoker(backend, circuitBreaker).invoke(context, null, connection ->
+            connection.responseHandler(response -> {})
+        );
 
         assertThat(circuitBreaker.getMetrics().getNumberOfSlowCalls()).isZero();
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);

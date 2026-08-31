@@ -76,8 +76,7 @@ public class CircuitBreakerPolicyV3 {
                         CIRCUIT_BREAKER_OPEN_STATE,
                         HttpStatusCode.SERVICE_UNAVAILABLE_503,
                         CIRCUIT_BREAKER_OPEN_STATE_MESSAGE,
-                        Maps
-                            .<String, Object>builder()
+                        Maps.<String, Object>builder()
                             .put("failure_rate", circuitBreaker.getMetrics().getFailureRate())
                             .put("slow_call_rate", circuitBreaker.getMetrics().getSlowCallRate())
                             .build()
@@ -102,8 +101,7 @@ public class CircuitBreakerPolicyV3 {
     }
 
     protected CircuitBreakerConfig circuitBreakerConfig() {
-        return CircuitBreakerConfig
-            .custom()
+        return CircuitBreakerConfig.custom()
             .failureRateThreshold(configuration.getFailureRateThreshold())
             .slowCallRateThreshold(configuration.getSlowCallRateThreshold())
             .slowCallDurationThreshold(Duration.ofMillis(configuration.getSlowCallDurationThreshold()))
@@ -130,33 +128,29 @@ public class CircuitBreakerPolicyV3 {
         public void invoke(ExecutionContext context, ReadStream<Buffer> stream, Handler<ProxyConnection> connectionHandler) {
             long startTimeNanos = System.nanoTime();
 
-            decorated.invoke(
-                context,
-                stream,
-                proxyConnection -> {
-                    ProxyConnection wrappedProxyConnection = new ProxyConnection() {
-                        @Override
-                        public WriteStream<Buffer> write(Buffer buffer) {
-                            proxyConnection.write(buffer);
-                            return this;
-                        }
+            decorated.invoke(context, stream, proxyConnection -> {
+                ProxyConnection wrappedProxyConnection = new ProxyConnection() {
+                    @Override
+                    public WriteStream<Buffer> write(Buffer buffer) {
+                        proxyConnection.write(buffer);
+                        return this;
+                    }
 
-                        @Override
-                        public void end() {
-                            proxyConnection.end();
-                        }
+                    @Override
+                    public void end() {
+                        proxyConnection.end();
+                    }
 
-                        @Override
-                        public ProxyConnection responseHandler(Handler<ProxyResponse> responseHandler) {
-                            return proxyConnection.responseHandler(
-                                new CircuitBreakerResponseHandler(responseHandler, startTimeNanos, circuitBreaker)
-                            );
-                        }
-                    };
+                    @Override
+                    public ProxyConnection responseHandler(Handler<ProxyResponse> responseHandler) {
+                        return proxyConnection.responseHandler(
+                            new CircuitBreakerResponseHandler(responseHandler, startTimeNanos, circuitBreaker)
+                        );
+                    }
+                };
 
-                    connectionHandler.handle(wrappedProxyConnection);
-                }
-            );
+                connectionHandler.handle(wrappedProxyConnection);
+            });
         }
     }
 
