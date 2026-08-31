@@ -28,9 +28,9 @@ import io.gravitee.policy.circuitbreaker.configuration.CircuitBreakerPolicyConfi
 import io.reactivex.rxjava3.core.Completable;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
 
-@Slf4j
+@CustomLog
 public class CircuitBreakerPolicy extends CircuitBreakerPolicyV3 implements HttpPolicy {
 
     public CircuitBreakerPolicy(CircuitBreakerPolicyConfiguration configuration) {
@@ -117,7 +117,7 @@ public class CircuitBreakerPolicy extends CircuitBreakerPolicyV3 implements Http
                         long elapsedTimeNanos = System.nanoTime() - startTime;
                         int responseStatus = ctx.response().status();
 
-                        log.debug("Hook on Complete Elapsed time: {} ms", TimeUnit.NANOSECONDS.toMillis(elapsedTimeNanos));
+                        ctx.withLogger(log).debug("Hook on Complete Elapsed time: {} ms", TimeUnit.NANOSECONDS.toMillis(elapsedTimeNanos));
 
                         if (responseStatus >= HttpStatusCode.INTERNAL_SERVER_ERROR_500) {
                             circuitBreaker.onError(elapsedTimeNanos, TimeUnit.NANOSECONDS, null);
@@ -127,12 +127,12 @@ public class CircuitBreakerPolicy extends CircuitBreakerPolicyV3 implements Http
                     })
                     .doOnError(th -> {
                         long elapsedTimeNanos = System.nanoTime() - startTime;
-                        log.debug("Hook on Error Elapsed time: {} ms", TimeUnit.NANOSECONDS.toMillis(elapsedTimeNanos));
+                        ctx.withLogger(log).debug("Hook on Error Elapsed time: {} ms", TimeUnit.NANOSECONDS.toMillis(elapsedTimeNanos));
                         circuitBreaker.onError(elapsedTimeNanos, TimeUnit.NANOSECONDS, th);
                     })
                     .doOnDispose(() -> {
                         long elapsedTimeNanos = System.nanoTime() - startTime;
-                        log.debug("Hook on Dispose Elapsed time: {} ms", TimeUnit.NANOSECONDS.toMillis(elapsedTimeNanos));
+                        ctx.withLogger(log).debug("Hook on Dispose Elapsed time: {} ms", TimeUnit.NANOSECONDS.toMillis(elapsedTimeNanos));
 
                         if (isInterruptionWorthRecording(elapsedTimeNanos)) {
                             circuitBreaker.onError(elapsedTimeNanos, TimeUnit.NANOSECONDS, null);

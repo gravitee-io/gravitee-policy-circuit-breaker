@@ -40,8 +40,9 @@ class CircuitBreakerHalfOpenEscapeHatchTest {
     void should_stay_half_open_forever_when_a_probe_is_never_recorded() throws InterruptedException {
         var circuitBreaker = halfOpenCircuitBreakerWithAnUnrecordedProbe(new CircuitBreakerPolicyConfiguration());
 
-        assertThat(awaitStateOtherThan(circuitBreaker, CircuitBreaker.State.HALF_OPEN, Duration.ofMillis(500)))
-            .isEqualTo(CircuitBreaker.State.HALF_OPEN);
+        assertThat(awaitStateOtherThan(circuitBreaker, CircuitBreaker.State.HALF_OPEN, Duration.ofMillis(500))).isEqualTo(
+            CircuitBreaker.State.HALF_OPEN
+        );
         assertThat(circuitBreaker.tryAcquirePermission()).isFalse();
     }
 
