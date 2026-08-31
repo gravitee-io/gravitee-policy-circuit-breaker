@@ -234,6 +234,24 @@ Strikethrough text indicates that a version is deprecated.
 
 ## Changelog
 
+### [2.1.0](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/compare/2.0.0...2.1.0) (2026-08-31)
+
+
+##### Bug Fixes
+
+* apply schema defaults to policy configuration ([d6d4731](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/d6d473189a82f37cc8f728e83d6ccad8e9e36219))
+* hold the circuit in the registry rather than in a field ([73de81d](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/73de81de711e0707e2569de78239915cb81ee8f0))
+* measure call duration from the invocation start ([faed663](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/faed663dfa97bc56f17b24a21df78e62a9ca991d))
+* measure v3 engine call duration with its own clock ([d865251](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/d865251aefac70a9f72dcfef358a86952fc97417))
+
+
+##### Features
+
+* expose maxWaitDurationInHalfOpenState ([ccc62ef](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/ccc62ef86f58ec35594b95c0ffc9bf1939fcb02d))
+* expose minimumNumberOfCalls ([07644be](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/07644beeb0b809cf95dcd3c2231e0405921afcdf))
+* expose permittedNumberOfCallsInHalfOpenState ([f2768ef](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/f2768efb5fe83e60c3d8934688fff186e4d253c6))
+* record interrupted calls as failures when enabled ([eadccf9](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/commit/eadccf9f49d55da7918f07b1a5aec89a981c842a))
+
 ### [2.0.0](https://github.com/gravitee-io/gravitee-policy-circuit-breaker/compare/1.1.5...2.0.0) (2025-02-13)
 
 
