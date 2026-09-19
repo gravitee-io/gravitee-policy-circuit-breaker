@@ -77,10 +77,10 @@ The `policy-circuit-breaker` policy can be applied to the following API types an
 ## Compatibility matrix
 Strikethrough text indicates that a version is deprecated.
 
-| Plugin version| APIM |
-| --- | ---  |
-|~~1.x~~|~~4.5 and earlier~~ |
-|2.x|4.6 and above |
+| Plugin version| APIM| Java version |
+| --- | --- | ---  |
+|~~1.x~~|~~4.5 and earlier~~|~~11~~ |
+|2.x|4.7 and above|21 |
 
 
 ## Configuration options

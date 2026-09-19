@@ -2,7 +2,9 @@ rows:
     - data:
           plugin: "1.x"
           apim: "4.5 and earlier"
+          java: 11
       deprecated: true
     - data:
           plugin: "2.x"
-          apim: "4.6 and above"
+          apim: "4.7 and above"
+          java: 21
